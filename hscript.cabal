@@ -1,0 +1,33 @@
+Name:                hscript
+Version:             0.1
+Synopsis:            Shell scripts with Haskell
+
+License:             BSD3
+License-file:        LICENSE
+Author:              Nils Schweinsberg
+Maintainer:          mail@n-sch.de
+Category:            System
+
+Build-type:          Simple
+Cabal-version:       >= 1.8
+
+Executable newProject
+
+    GHC-Options: -Wall -O2
+    HS-Source-Dirs: ex-src/newProject
+    Main-is: Main.hs
+
+    Build-depends:
+        base == 4.*,
+        directory == 1.*,
+        process == 1.*
+
+Executable wwwSync
+
+    GHC-Options: -Wall -O2
+    HS-Source-Dirs: ex-src/wwwSync
+    Main-is: Main.hs
+
+    Build-depends:
+        base == 4.*,
+        process == 1.*
