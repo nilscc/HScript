@@ -1,6 +1,6 @@
 Name:                hscript
 Version:             0.1
-Synopsis:            Shell scripts with Haskell
+Synopsis:            My Haskell shell scripts
 
 License:             BSD3
 License-file:        LICENSE
@@ -11,7 +11,20 @@ Category:            System
 Build-type:          Simple
 Cabal-version:       >= 1.8
 
-Executable newProject
+Library
+
+    GHC-Options: -Wall
+    HS-Source-Dirs: src
+
+    Build-depends:
+        base == 4.*,
+        mtl == 1.*,
+        process == 1.*
+
+    Exposed-Modules:
+        System.Shell
+
+Executable newproject
 
     GHC-Options: -Wall -O2
     HS-Source-Dirs: ex-src/newProject
@@ -22,7 +35,7 @@ Executable newProject
         directory == 1.*,
         process == 1.*
 
-Executable wwwSync
+Executable wwwsync
 
     GHC-Options: -Wall -O2
     HS-Source-Dirs: ex-src/wwwSync
@@ -30,4 +43,5 @@ Executable wwwSync
 
     Build-depends:
         base == 4.*,
-        process == 1.*
+        process == 1.*,
+        hscript == 0.1.*

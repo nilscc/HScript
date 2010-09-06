@@ -1,14 +1,11 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS -fno-warn-unused-do-bind #-}
 
 module Main where
 
-import Control.Applicative
 import Data.List
-import System.Process
-import System.Exit
 import System.Environment
-import System.IO
+import System.Exit
+import System.Shell
 import Text.Printf
 
 --------------------------------------------------------------------------------
@@ -19,7 +16,7 @@ www      = Local  "/home/nils/www/"
 lagrange = Remote "lagrange" "htdocs/n-sch.de/"
 
 -- | Upload all files to the server
-rsyncUp :: CreateProcess
+rsyncUp :: Shell String
 rsyncUp = rsync www lagrange $
                 [ "-av"
                 , "--delete"
@@ -27,12 +24,11 @@ rsyncUp = rsync www lagrange $
                 ]
 
 -- | Download all files from the server
-rsyncDown :: CreateProcess
+rsyncDown :: Shell String
 rsyncDown = rsync lagrange www $
                   [ "-av"
                   , "--delete"
                   ] ++ excludelist
-
   where
     excludelist = map (printf "--exclude=\"%s\"")
                       [ "/hdocs"
@@ -42,36 +38,27 @@ rsyncDown = rsync lagrange www $
 --------------------------------------------------------------------------------
 -- IO functions
 
-runRsync :: CreateProcess -> IO ()
-runRsync p = do
-    (_,Just hout, Just herr, ph) <- createProcess p { std_out = CreatePipe
-                                                    , std_err = CreatePipe }
-    exitCode <- waitForProcess ph
-    case exitCode of
-         ExitSuccess   -> do
-             outLog <- mkLog <$> hGetContents hout
-             printf "rsync finished:\n\n%s\n" outLog
-
-         ExitFailure _ -> do
-             errLog <- mkErrLog <$> hGetContents herr
-             outLog <- mkLog    <$> hGetContents hout
-             printf "rsync error:\n\n%s\n"  errLog
-             printf "Complete log:\n\n%s\n" outLog
-             exitFailure
-  where
-    mkLog    = unlines . map ("> " ++) . lines
-    mkErrLog = unlines . map ("! " ++) . lines
-
-
 main :: IO ()
 main = do
     args <- getArgs
     case args of
          ["up"]   -> runRsync rsyncUp
          ["down"] -> runRsync rsyncDown
-         _        -> do
-             hPutStrLn stderr "up/down expected."
+         _        -> do printf "up/down expected."
+                        exitFailure
+
+runRsync :: Shell String -> IO ()
+runRsync sh = do
+    res <- shell sh
+    case res of
+         Right l ->
+             printf "rsync finished:\n\n%s\n" (mkLog l)
+         Left err -> do
+             printf "rsync error:\n\n%s\n"    (mkErrLog err)
              exitFailure
+  where
+    mkLog    = unlines . map ("> " ++) . lines
+    mkErrLog = unlines . map ("! " ++) . lines
 
 
 --------------------------------------------------------------------------------
@@ -84,8 +71,8 @@ data RsyncPath
     = Local FilePath
     | Remote Host FilePath
 
-rsync :: RsyncPath -> RsyncPath -> [Argument] -> CreateProcess
-rsync p1 p2 args = shell $ printf "rsync %s \"%s\" \"%s\"" (genArgs args) (genPath p1) (genPath p2)
+rsync :: RsyncPath -> RsyncPath -> [Argument] -> Shell String
+rsync p1 p2 args = run $ printf "rsync %s \"%s\" \"%s\"" (genArgs args) (genPath p1) (genPath p2)
 
   where
     genArgs a = intercalate " " a
